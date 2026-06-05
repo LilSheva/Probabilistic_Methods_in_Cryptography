@@ -345,7 +345,7 @@ class LFSR:
         self.state = [fb] + self.state[:-1]
         return out
 
-def run_lab4(doc):
+def run_lab4(doc, seed=42):
     doc.add_text(r"\newpage")
     doc.add_section("Лабораторная работа №4")
     doc.add_text(r"\textbf{Задание:}")
@@ -360,7 +360,7 @@ def run_lab4(doc):
     L2, taps2 = 22, [21, 0]
     L3, taps3 = 25, [24, 2]
     
-    rng = random.Random(42)
+    rng = random.Random(seed) if seed is not None else random.Random()
     key1 = [rng.randint(0, 1) for _ in range(L1)]
     key2 = [rng.randint(0, 1) for _ in range(L2)]
     key3 = [rng.randint(0, 1) for _ in range(L3)]
@@ -474,7 +474,12 @@ def run_lab4(doc):
 def main():
     parser = argparse.ArgumentParser(description="Coursework LaTeX Generator")
     parser.add_argument('--verbosity', choices=['min', 'mid', 'max'], default='max', help="Уровень детализации отчета")
+    parser.add_argument('--seed', type=int, default=42, help="Seed для генерации (по умолчанию 42 для стабильности)")
+    parser.add_argument('--random', action='store_true', help="Случайная генерация параметров (игнорирует seed)")
     args = parser.parse_args()
+    
+    if args.random:
+        args.seed = None
 
     print(f"Starting LaTeX generation with verbosity: {args.verbosity}")
     doc = LatexDocument(verbosity=args.verbosity)
@@ -482,7 +487,8 @@ def main():
     # ------------------ PRE-COMPUTE MATH CORE (LAB 1-3) ------------------
     size = 6
     sbox = list(range(2**size))
-    random.seed(42)  # For deterministic LaTeX output
+    if args.seed is not None:
+        random.seed(args.seed)  # For deterministic LaTeX output
     random.shuffle(sbox)
     
     functions = [[0 for _ in range(2**size)] for _ in range(size)]
@@ -592,7 +598,7 @@ def main():
     run_lab1(doc, size, sbox, functions, weight, jeg, fictiv)
     run_lab2(doc, size, functions, weight, zapret)
     run_lab3(doc, size, functions, st_struct, lin_pribl, auto_cor, bent, kor_imun)
-    run_lab4(doc)
+    run_lab4(doc, seed=args.seed)
     
     doc.finish()
 
